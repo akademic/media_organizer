@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -90,7 +91,7 @@ func moveFile(path string, info os.FileInfo) {
 	moved_files += 1
 
 	if config.Limit > 0 && moved_files == config.Limit {
-		log.Println("Copied/Moved files limit reached: " + string(config.Limit))
+		log.Println("Copied/Moved files limit reached: " + strconv.Itoa(config.Limit))
 		os.Exit(0)
 	}
 }
