@@ -13,11 +13,14 @@ import (
 
 type AppConfig struct {
 	DryRun bool
+	Delete bool
+	Limit  int
 	Src    string
 	Dst    string
 }
 
 var config AppConfig
+var moved_files int = 0
 
 func main() {
 	InitConfig()
@@ -51,6 +54,8 @@ func moveFile(path string, info os.FileInfo) {
 
 	log.Print(path + " -> " + new_path)
 
+	file_moved := false
+
 	if !config.DryRun {
 		os.MkdirAll(filepath.Dir(new_path), os.ModePerm)
 
@@ -67,6 +72,26 @@ func moveFile(path string, info os.FileInfo) {
 
 		err = new_file.Sync()
 		checkError(err)
+
+		if err == nil {
+			file_moved = true
+		}
+	}
+
+	if config.Delete {
+		log.Println("Deleting " + path)
+
+		if file_moved && !config.DryRun {
+			err := os.Remove(path)
+			checkError(err)
+		}
+	}
+
+	moved_files += 1
+
+	if config.Limit > 0 && moved_files == config.Limit {
+		log.Println("Copied/Moved files limit reached: " + string(config.Limit))
+		os.Exit(0)
 	}
 }
 
@@ -108,8 +133,10 @@ func InitConfig() {
 	config = AppConfig{}
 
 	flag.BoolVar(&config.DryRun, "dry_run", true, "Do not perform actions")
+	flag.BoolVar(&config.Delete, "delete", false, "Delete old file")
 	flag.StringVar(&config.Src, "src", "", "Path to source directory")
 	flag.StringVar(&config.Dst, "dst", "", "Path to destination directory")
+	flag.IntVar(&config.Limit, "limit", 100, "Maximum copied/moved files count")
 
 	flag.Parse()
 
