@@ -41,6 +41,10 @@ func processFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
+	if strings.HasPrefix(info.Name(), ".") {
+		return nil
+	}
+
 	if !info.IsDir() {
 		moveFile(path, info)
 	}
